@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #4be277;
+  --color-primary-container: #22c55e;
+  --color-on-primary-container: #004b1e;
+  --color-primary-fixed: #6bff8f;
+  --color-primary-fixed-dim: #4ae176;
+  
+  --color-secondary: #d0bcff;
+  --color-secondary-container: #571bc1;
+  --color-on-secondary-container: #c4abff;
+  --color-secondary-fixed-dim: #d0bcff;
+  
+  --color-tertiary: #afc7ff;
+  --color-tertiary-container: #82abff;
+  
+  --color-surface: #131313;
+  --color-surface-dim: #131313;
+  --color-surface-bright: #3a3939;
+  --color-surface-container-lowest: #0e0e0e;
+  --color-surface-container-low: #1c1b1b;
+  --color-surface-container: #201f1f;
+  --color-surface-container-high: #2a2a2a;
+  --color-surface-container-highest: #353534;
+  
+  --color-on-surface: #e5e2e1;
+  --color-on-surface-variant: #bccbb9;
+  
+  --color-error: #ffb4ab;
+  --color-error-container: #93000a;
+  --color-on-error-container: #ffdad6;
+  
+  --color-outline: #869585;
+  --color-outline-variant: #3d4a3d;
+
+  --font-headline: "Inter", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-label: "Inter", sans-serif;
+}
+
+body {
+  background-color: var(--color-surface-container-lowest);
+  color: var(--color-on-surface);
+  overflow: hidden;
+}
+
+/* Custom Utilities */
+.glass-panel {
+  background: rgba(19, 19, 19, 0.7);
+  backdrop-filter: blur(24px);
+}
+
+.ios-input-focus:focus-within {
+  box-shadow: 0 0 0 1px rgba(75, 226, 119, 0.3);
+}
+
+.glow-border {
+  box-shadow: inset 0 0 0 1px rgba(75, 226, 119, 0.1), 0 0 40px rgba(0, 0, 0, 0.8);
+}
+
+.bg-glow-portal {
+  background: radial-gradient(circle at center, rgba(75, 226, 119, 0.08) 0%, rgba(19, 19, 19, 0) 70%);
+}
+
+.waveform-mask {
+  mask-image: linear-gradient(to right, transparent, black 20%, black 80%, transparent);
+}
+
+/* Animations */
+@keyframes vibrate {
+  0% { transform: translate(0); }
+  20% { transform: translate(-1px, 1px); }
+  40% { transform: translate(-1px, -1px); }
+  60% { transform: translate(1px, 1px); }
+  80% { transform: translate(1px, -1px); }
+  100% { transform: translate(0); }
+}
+
+.vibration-sim {
+  animation: vibrate 0.2s linear infinite;
+}
+
+@keyframes pulse-opacity {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(0.98); }
+}
+
+.pulse-text {
+  animation: pulse-opacity 2s ease-in-out infinite;
+}
