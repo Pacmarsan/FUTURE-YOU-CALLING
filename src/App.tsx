@@ -12,13 +12,11 @@ import {
 } from 'lucide-react';
 
 // --- Types ---
-type Step = 'splash' | 'setup' | 'voice' | 'incoming' | 'active' | 'ended';
+type Step = 'splash' | 'setup' | 'incoming' | 'active' | 'ended';
 
-interface UserData {
-  name: string;
-  goal: string;
-  fear: string;
-}
+import { UserContext as UserData } from './lib/prompt-engine';
+import { useCallSession } from './hooks/useCallSession';
+import { ConversationProvider } from '@elevenlabs/react';
 
 // --- Shared Components ---
 const TopBar = ({ title = "Future You Calling", showLive = false }) => (
@@ -48,7 +46,7 @@ const TopBar = ({ title = "Future You Calling", showLive = false }) => (
 
 // --- Screens ---
 
-const SplashScreen = ({ onComplete }: { onComplete: () => void }) => {
+const SplashScreen = ({ onComplete }: { onComplete: () => void; key?: string }) => {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
@@ -176,7 +174,7 @@ const SplashScreen = ({ onComplete }: { onComplete: () => void }) => {
   );
 };
 
-const SetupScreen = ({ onNext }: { onNext: (data: UserData) => void }) => {
+const SetupScreen = ({ onNext }: { onNext: (data: UserData) => void; key?: string }) => {
   const [data, setData] = useState<UserData>({ name: '', goal: '', fear: '' });
 
   return (
@@ -256,73 +254,9 @@ const SetupScreen = ({ onNext }: { onNext: (data: UserData) => void }) => {
   );
 };
 
-const VoiceScreen = ({ onNext }: { onNext: (voice: string) => void }) => {
-  const [selected, setSelected] = useState('mentor');
+// VoiceScreen removed
 
-  const voices = [
-    { id: 'mentor', name: 'The Mentor', desc: 'Calm, wise, and grounded.', icon: Sparkles, color: 'text-primary', bg: 'bg-primary/10' },
-    { id: 'adventurer', name: 'The Adventurer', desc: 'Energetic, inspiring, and bold.', icon: Compass, color: 'text-secondary', bg: 'bg-secondary/10' },
-    { id: 'stoic', name: 'The Stoic', desc: 'Resilient, direct, and pragmatic.', icon: Shield, color: 'text-tertiary', bg: 'bg-tertiary/10' },
-  ];
-
-  return (
-    <motion.div 
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      className="flex-1 px-8 pt-4 pb-12 flex flex-col justify-between items-center text-center h-full"
-    >
-      <div className="w-full">
-        <span className="font-label text-[11px] uppercase tracking-[0.3em] text-secondary mb-2 block">TRANS-CHRONAL CONFIGURATION</span>
-        <h1 className="text-3xl font-black text-on-surface tracking-tighter leading-tight">Select Your Future Voice</h1>
-        <p className="text-on-surface-variant text-sm mt-4 font-light leading-relaxed max-w-[280px] mx-auto">
-          The acoustic texture of your future self determines the emotional resonance of the link.
-        </p>
-      </div>
-
-      <div className="w-full space-y-4 my-8">
-        {voices.map((v) => {
-          const isActive = selected === v.id;
-          const Icon = v.icon;
-          return (
-            <div 
-              key={v.id}
-              onClick={() => setSelected(v.id)}
-              className={`flex items-center p-5 rounded-2xl transition-all duration-300 cursor-pointer group ${isActive ? 'bg-primary/5 outline outline-1 outline-primary/40' : 'bg-surface-container-low hover:bg-surface-container-high'}`}
-            >
-              <div className={`w-12 h-12 rounded-xl ${v.bg} flex items-center justify-center mr-4`}>
-                <Icon className={`w-6 h-6 ${v.color}`} />
-              </div>
-              <div className="flex-1 text-left">
-                <h3 className="text-on-surface font-bold text-lg">{v.name}</h3>
-                <p className="text-on-surface-variant text-xs font-medium">{v.desc}</p>
-              </div>
-              <button className={`w-10 h-10 rounded-full border flex items-center justify-center transition-colors ${isActive ? 'border-primary text-primary' : 'border-white/10 text-white/60 hover:text-primary hover:border-primary'}`}>
-                <Play className="w-4 h-4 ml-1" />
-              </button>
-            </div>
-          )
-        })}
-      </div>
-
-      <div className="w-full px-2 relative z-10 mt-auto">
-        <button 
-          onClick={() => onNext(selected)}
-          className="w-full py-5 bg-primary-container text-on-primary-container font-black text-sm uppercase tracking-widest rounded-2xl shadow-[0_20px_40px_rgba(34,197,94,0.2)] hover:scale-[0.98] transition-transform flex items-center justify-center group"
-        >
-          Confirm Voice
-          <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-        </button>
-        <div className="mt-6 flex justify-center items-center gap-2">
-          <div className="w-1 h-1 rounded-full bg-primary animate-pulse"></div>
-          <span className="text-[9px] font-label uppercase tracking-[0.2em] text-white/30">Encryption Active - Temporal Relay Ready</span>
-        </div>
-      </div>
-    </motion.div>
-  );
-};
-
-const IncomingScreen = ({ onAccept, onDecline }: { onAccept: () => void, onDecline: () => void }) => {
+const IncomingScreen = ({ onAccept, onDecline }: { onAccept: () => void, onDecline: () => void; key?: string }) => {
   return (
     <motion.div 
       initial={{ opacity: 0, scale: 0.95 }}
@@ -345,7 +279,7 @@ const IncomingScreen = ({ onAccept, onDecline }: { onAccept: () => void, onDecli
           </div>
         </div>
         <h1 className="font-headline font-extrabold text-5xl tracking-tighter text-on-surface pulse-text mb-2">
-          You (2029)
+          You ({new Date().getFullYear() + 5})
         </h1>
         <p className="font-label text-secondary uppercase tracking-[0.2em] text-[11px] font-semibold">
           Future Timeline • Stable Link
@@ -354,11 +288,11 @@ const IncomingScreen = ({ onAccept, onDecline }: { onAccept: () => void, onDecli
         <div className="mt-12 flex justify-center gap-8">
           <div className="text-center">
             <p className="text-[10px] uppercase text-on-surface-variant tracking-widest opacity-50 mb-1">Offset</p>
-            <p className="font-mono text-sm text-on-surface">+1,826 Days</p>
+            <p className="font-mono text-sm text-on-surface">+{(5 * 365) + 1} Days</p>
           </div>
           <div className="text-center">
             <p className="text-[10px] uppercase text-on-surface-variant tracking-widest opacity-50 mb-1">Signal</p>
-            <p className="font-mono text-sm text-primary">98.4%</p>
+            <p className="font-mono text-sm text-primary">99.9%</p>
           </div>
         </div>
       </div>
@@ -390,114 +324,158 @@ const IncomingScreen = ({ onAccept, onDecline }: { onAccept: () => void, onDecli
   );
 };
 
-const ActiveScreen = ({ onEnd }: { onEnd: () => void }) => {
-  const fullText = "Listen carefully, the decision you make tomorrow at the meeting will redefine the trajectory of the next five years. Don't play it safe...";
-  const [displayedText, setDisplayedText] = useState("");
+// --- Subcomponents for Sleek HUD ---
+const StreamText = ({ text }: { text: string }) => {
+  const [displayed, setDisplayed] = useState('');
   
   useEffect(() => {
-    let i = 0;
+    setDisplayed('');
+    if (!text) return;
+    
+    // Simulate chunking engine delivery
+    const words = text.split(' ');
+    let currentIndex = 0;
+    
     const interval = setInterval(() => {
-      setDisplayedText(fullText.substring(0, i));
-      i++;
-      if (i > fullText.length) clearInterval(interval);
-    }, 50);
+      if (currentIndex < words.length) {
+        setDisplayed(prev => prev + (prev ? ' ' : '') + words[currentIndex]);
+        currentIndex++;
+      } else {
+        clearInterval(interval);
+      }
+    }, 70); // subtle delay per word
+    
     return () => clearInterval(interval);
-  }, []);
+  }, [text]);
+
+  return <span>{displayed}</span>;
+};
+
+const ActiveScreen = ({ onEnd, userData, voice }: { onEnd: () => void, userData: UserData, voice: string; key?: string }) => {
+  const { callState, displayedText, handleInterrupt, endCall } = useCallSession(userData, voice);
+
+  // Emotional Modulation Logic Simulation
+  // Supportive -> Default, Reflective -> Thinking, Urgent -> Interrupted
+  const emotionState = callState === 'interrupted' ? 'urgent' : callState === 'thinking' ? 'reflective' : 'supportive';
 
   return (
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="flex-1 flex flex-col relative z-10 px-8 py-4 h-full w-full"
+      className="flex-1 flex flex-col relative z-10 px-6 py-4 h-full w-full max-w-sm mx-auto"
     >
-      <div className="mt-4 text-center">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-on-surface-variant mb-2">Temporal Connection Active</p>
-        <h1 className="text-4xl font-extrabold tracking-tighter text-on-surface">You (2029)</h1>
-        <div className="flex items-center justify-center gap-2 mt-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-          <span className="text-primary text-sm font-medium tracking-wide">Connected</span>
+      {/* Target Logic (Layers 1-3) */}
+      <div className="flex gap-3 mb-6">
+        <div className="flex-1 bg-surface-container-highest/60 backdrop-blur-md rounded-2xl p-4 flex flex-col justify-center border border-white/5 transition-all">
+          <span className="text-[8px] uppercase tracking-[0.2em] text-primary/70 font-semibold mb-1">Vector_01.Goal</span>
+          <span className="text-xs text-on-surface font-medium truncate">{userData.goal}</span>
+        </div>
+        <div className="flex-1 bg-surface-container-highest/60 backdrop-blur-md rounded-2xl p-4 flex flex-col justify-center border border-white/5 transition-all">
+          <span className="text-[8px] uppercase tracking-[0.2em] text-error/70 font-semibold mb-1">Vector_02.Fear</span>
+          <span className="text-xs text-on-surface font-medium truncate">{userData.fear}</span>
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col justify-center gap-8 my-8 overflow-hidden">
-        {/* AI Waveform */}
-        <div className="relative h-24 w-full flex items-center justify-center waveform-mask">
-          <div className="absolute inset-0 flex items-center justify-around">
-            {[8, 16, 24, 14, 20, 10, 16, 22, 12].map((h, i) => (
-              <motion.div 
-                key={i}
-                animate={{ height: [h*2, h*4, h*2] }}
-                transition={{ repeat: Infinity, duration: 0.8 + (i%3)*0.2, ease: "easeInOut" }}
-                className={`w-1.5 rounded-full ${i%2===0 ? 'bg-secondary shadow-[0_0_12px_#d0bcff]' : 'bg-primary shadow-[0_0_15px_#4be277]'}`}
-              />
-            ))}
+      {/* Main Core / Central Waveform */}
+      <div className="flex-1 flex flex-col justify-center relative">
+        
+        {/* Emotional Matrix (Layer 4) */}
+        <div className="absolute top-0 left-0 w-full flex justify-between items-center px-4">
+          <span className="text-[9px] uppercase tracking-[0.2em] text-on-surface-variant/50 font-bold">Core State</span>
+          <div className="flex gap-2 items-center bg-surface-container-highest/50 px-3 py-1.5 rounded-full border border-white/5">
+            <div className={`w-1.5 h-1.5 rounded-full transition-colors duration-500 ${emotionState === 'supportive' ? 'bg-primary shadow-[0_0_8px_#4be277]' : 'bg-white/20'}`} />
+            <div className={`w-1.5 h-1.5 rounded-full transition-colors duration-500 ${emotionState === 'reflective' ? 'bg-[#ffca28] shadow-[0_0_8px_#ffca28]' : 'bg-white/20'}`} />
+            <div className={`w-1.5 h-1.5 rounded-full transition-colors duration-500 ${emotionState === 'urgent' ? 'bg-error shadow-[0_0_8px_#ff5449]' : 'bg-white/20'}`} />
           </div>
-          <div className="text-[10px] absolute -top-2 left-0 uppercase tracking-widest text-secondary font-bold opacity-80">Incoming Signal</div>
         </div>
 
-        {/* Transcription */}
-        <div className="flex flex-col items-center gap-6 text-center">
-          <div className="px-4 py-1 rounded-full bg-surface-container-high/40 backdrop-blur-md border border-outline-variant/10">
-            <span className="text-[11px] font-bold text-secondary uppercase tracking-[0.2em]">Speaking...</span>
-          </div>
-          <div className="min-h-[120px] flex items-center px-4">
-            <p className="text-2xl font-medium leading-tight text-on-surface/90 italic">
-              "{displayedText}"
-            </p>
-          </div>
-          <p className="text-[10px] font-medium text-on-surface-variant/50 uppercase tracking-widest">Tap or speak to interrupt</p>
+        {/* AI Waveform Engine */}
+        <div className="relative h-32 w-full flex items-center justify-center my-8">
+           <div className={`absolute inset-0 bg-gradient-radial ${emotionState === 'urgent' ? 'from-error/10' : emotionState === 'reflective' ? 'from-[#ffca28]/10' : 'from-primary/10'} to-transparent opacity-50 blur-xl transition-colors duration-700`} />
+           <div className="flex items-center justify-center gap-1.5 relative z-10">
+            {[8, 16, 24, 14, 20, 10, 16, 22, 12].map((h, i) => {
+              const active = callState === 'listening' || callState === 'thinking';
+              return (
+                <motion.div 
+                  key={i}
+                  animate={{ height: active ? [h*1.5, h*2, h*1.5] : [h*2, h*4, h*2] }}
+                  transition={{ repeat: Infinity, duration: active ? 2 : 0.8 + (i%3)*0.2, ease: "easeInOut" }}
+                  className={`w-1.5 rounded-full transition-colors duration-500 ${emotionState === 'urgent' ? 'bg-error shadow-[0_0_12px_#ff5449]' : emotionState === 'reflective' ? 'bg-[#ffca28] shadow-[0_0_12px_#ffca28]' : 'bg-primary shadow-[0_0_12px_#4be277]'}`}
+                  style={{ opacity: active ? 0.3 : 1 }}
+                />
+              )
+            })}
+           </div>
         </div>
 
-        {/* User Waveform */}
-        <div className="relative h-16 w-full flex items-center justify-center waveform-mask">
-          <div className="absolute inset-0 flex items-center justify-center gap-1.5">
-             {[2,3,2,4,2,3,2,4,2].map((h, i) => (
-              <div key={i} className="w-1 bg-tertiary rounded-full shadow-[0_0_8px_#afc7ff]" style={{ height: `${h*4}px` }} />
-            ))}
-          </div>
-          <div className="text-[10px] absolute -bottom-2 left-0 uppercase tracking-widest text-tertiary font-bold opacity-80">Local Feed</div>
-        </div>
-      </div>
-
-      <div className="mt-auto pb-8 flex flex-col items-center gap-8">
-        <div className="flex items-center justify-center gap-12">
-          <button className="flex flex-col items-center justify-center text-on-surface/40 hover:text-secondary transition-colors group">
-            <div className="w-14 h-14 rounded-full flex items-center justify-center bg-surface-container-high/50 group-hover:bg-surface-container-high transition-all mb-2">
-              <Volume2 className="w-6 h-6" />
-            </div>
-            <span className="font-label text-[11px] font-semibold uppercase tracking-widest">Speaker</span>
-          </button>
+        {/* Decoder / Transcriber (Layers 5-6) */}
+        <div className="flex flex-col text-center px-4 mb-4">
+          {callState !== 'interrupted' && (
+             <div className="h-0.5 w-full bg-white/5 rounded-full mb-6 overflow-hidden relative">
+               {callState === 'thinking' && (
+                 <motion.div 
+                   animate={{ x: ["-100%", "100%"] }}
+                   transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+                   className="absolute top-0 left-0 w-1/3 h-full bg-gradient-to-r from-transparent via-[#ffca28] to-transparent opacity-50"
+                 />
+               )}
+             </div>
+          )}
           
-          <button className="relative group">
-            <div className="absolute -inset-4 bg-primary/20 rounded-full blur-xl opacity-50 group-active:opacity-100 transition-opacity"></div>
-            <div className="relative w-20 h-20 rounded-full bg-primary flex items-center justify-center text-on-primary-container shadow-[0_0_30px_rgba(75,226,119,0.3)] group-active:scale-90 duration-200">
-              <Mic className="w-8 h-8 fill-current" />
-            </div>
-            <div className="mt-4 font-label text-[11px] font-bold text-primary uppercase tracking-widest text-center">Active</div>
-          </button>
-
-          <button className="flex flex-col items-center justify-center text-on-surface/40 hover:text-secondary transition-colors group">
-            <div className="w-14 h-14 rounded-full flex items-center justify-center bg-surface-container-high/50 group-hover:bg-surface-container-high transition-all mb-2">
-              <Grid3x3 className="w-6 h-6" />
-            </div>
-            <span className="font-label text-[11px] font-semibold uppercase tracking-widest">Keypad</span>
-          </button>
+          <div className="min-h-[100px] flex items-center justify-center px-2">
+            {callState === 'interrupted' ? (
+               <div className="flex flex-col items-center">
+                 <span className="text-error font-bold tracking-[0.2em] uppercase text-xs mb-2">Temporal Override</span>
+                 <p className="text-on-surface-variant opacity-70 text-sm">Aborting current generation layer...</p>
+               </div>
+            ) : callState === 'thinking' ? (
+                <span className="text-on-surface-variant/50 text-[11px] uppercase tracking-[0.3em] animate-pulse">Calculating Resonance...</span>
+            ) : (
+               <p className="text-xl font-light leading-relaxed text-on-surface/90">
+                 {displayedText ? <StreamText text={displayedText} /> : <span className="opacity-30">Awaiting Signal...</span>}
+               </p>
+            )}
+          </div>
         </div>
+      </div>
 
-        <button 
-          onClick={onEnd}
-          className="w-full h-16 rounded-2xl bg-error-container text-on-error-container font-bold uppercase tracking-[0.25em] flex items-center justify-center gap-3 hover:bg-[#93000a] active:scale-95 transition-all duration-300"
-        >
-          <PhoneOff className="w-5 h-5" />
-          End Connection
-        </button>
+      {/* Control Module */}
+      <div className="mt-auto pb-6 relative z-20 w-full flex flex-col">
+        <div className="bg-surface-container-highest/30 p-2 rounded-[32px] border border-white/5 w-full flex justify-between items-center filter backdrop-blur-xl mb-4">
+           {/* End Call */}
+           <button 
+             onClick={() => { endCall(); onEnd(); }}
+             className="w-16 h-16 rounded-full bg-error/10 text-error flex items-center justify-center group active:scale-90 transition-all hover:bg-error/20"
+           >
+             <PhoneOff className="w-6 h-6" />
+           </button>
+           
+           {/* Mic/Override (Layer 8) */}
+           <button 
+             onClick={handleInterrupt}
+             className="relative flex-1 flex justify-center items-center h-16 mx-2 group"
+           >
+              <div className="absolute inset-0 bg-primary/10 rounded-[24px] group-active:bg-error/20 transition-colors"></div>
+              <Mic className={`w-6 h-6 z-10 transition-colors ${callState === 'interrupted' ? 'text-error' : 'text-primary'}`} />
+              <span className={`ml-3 font-semibold text-[11px] uppercase tracking-[0.1em] transition-colors z-10 ${callState === 'interrupted' ? 'text-error' : 'text-primary'}`}>
+                 Hold to Override
+              </span>
+           </button>
+           
+           {/* Logs toggle dummy */}
+           <button className="w-16 h-16 rounded-full bg-white/5 text-white/50 flex items-center justify-center group active:scale-90 transition-all hover:text-white/80">
+             <Grid3x3 className="w-5 h-5" />
+           </button>
+        </div>
+        
+        <p className="text-center text-[9px] uppercase tracking-[0.3em] font-medium text-white/20">Encrypted Matrix Stable</p>
       </div>
     </motion.div>
   );
 };
 
-const EndedScreen = ({ onReset }: { onReset: () => void }) => {
+const EndedScreen = ({ onReset }: { onReset: () => void; key?: string }) => {
   return (
     <motion.div 
       initial={{ opacity: 0, filter: 'blur(10px)' }}
@@ -604,10 +582,6 @@ export default function App() {
             <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-primary-container/10 rounded-full blur-[100px] pointer-events-none"></div>
           </>
         );
-      case 'voice':
-        return (
-          <div className="absolute -bottom-20 left-1/2 -translate-x-1/2 w-[300px] h-[300px] bg-secondary-container/20 rounded-full blur-[100px] pointer-events-none"></div>
-        );
       case 'incoming':
         return (
           <>
@@ -652,7 +626,7 @@ export default function App() {
         
         {step !== 'splash' && (
           <TopBar 
-            title={step === 'ended' ? 'Temporal Link Terminated' : step === 'voice' ? 'Signal_Status' : 'Future You Calling'} 
+            title={step === 'ended' ? 'Temporal Link Terminated' : 'Future You Calling'} 
             showLive={step === 'active'} 
           />
         )}
@@ -667,13 +641,7 @@ export default function App() {
           {step === 'setup' && (
             <SetupScreen 
               key="setup" 
-              onNext={(data) => { setUserData(data); setStep('voice'); }} 
-            />
-          )}
-          {step === 'voice' && (
-            <VoiceScreen 
-              key="voice" 
-              onNext={(v) => { setVoice(v); setStep('incoming'); }} 
+              onNext={(data) => { setUserData(data); setStep('incoming'); }} 
             />
           )}
           {step === 'incoming' && (
@@ -684,15 +652,19 @@ export default function App() {
             />
           )}
           {step === 'active' && (
-            <ActiveScreen 
-              key="active" 
-              onEnd={() => setStep('ended')} 
-            />
+            <ConversationProvider>
+              <ActiveScreen 
+                key="active" 
+                userData={userData!}
+                voice={voice!}
+                onEnd={() => setStep('ended')} 
+              />
+            </ConversationProvider>
           )}
           {step === 'ended' && (
             <EndedScreen 
               key="ended" 
-              onReset={() => { setUserData(null); setVoice(null); setStep('setup'); }} 
+              onReset={() => { setUserData(null); setStep('setup'); }} 
             />
           )}
         </AnimatePresence>
